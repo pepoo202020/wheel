@@ -66,7 +66,7 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-blue-500 to-blue-700 flex flex-col">
+    <div className="w-full  bg-gradient-to-b from-blue-500 to-blue-700 flex flex-col">
       <header className="w-full py-1 mb-1 bg-black text-white flex items-center justify-center text-lg font-bold">
         <Image src="/logo.png" alt="logo" width={40} height={40} />
       </header>
