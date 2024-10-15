@@ -1,101 +1,134 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import styles from "./styles/Home.module.css";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+const points = Array.from({ length: 11 }, (_, i) => i * 10);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+export default function Home() {
+  const nameTextInput = "الاسم ثلاثي";
+  const phoneTextInput = "رقم التليفون";
+
+  const [name, setName] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
+  const [isSpinning, setIsSpinning] = useState<boolean>(false);
+  const [finalRotation, setFinalRotation] = useState<number>(0); // لحفظ الزاوية النهائية
+  const router = useRouter();
+
+  const spinWheel = async () => {
+    if (!name || !phone) {
+      return alert("يرجى إدخال البيانات أولاً.");
+    }
+
+    setIsSpinning(true);
+    const randomPoint = points[Math.floor(Math.random() * points.length)];
+    const degreesToSpin = 3600 + randomPoint * 36; // إضافة دوران إضافي
+    setFinalRotation(degreesToSpin);
+
+    try {
+      const response = await fetch("/api/saveData", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, phone, point: randomPoint }), // إرسال البيانات إلى الـ API
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        alert(data.message); // إظهار رسالة التنبيه من الخادم
+        setIsSpinning(false);
+        setName("");
+        setPhone("");
+        return; // عدم الانتقال للصفحة التالية
+      }
+
+      // Navigate to the congratulations page if the data is saved successfully
+      setSelectedPoint(randomPoint);
+      setIsSpinning(false);
+      router.push(`/congrate?point=${randomPoint}`); // Navigate to the congratulations page
+    } catch (error) {
+      alert("حدث خطأ أثناء حفظ البيانات.");
+      console.log(error);
+      setIsSpinning(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    spinWheel();
+  };
+
+  return (
+    <div className="w-full h-full bg-gradient-to-b from-blue-500 to-blue-700 flex flex-col">
+      <header className="w-full py-1 mb-1 bg-black text-white flex items-center justify-center text-lg font-bold">
+        <Image src="/logo.png" alt="logo" width={40} height={40} />
+      </header>
+      <section className="flex flex-col items-center justify-center flex-1 text-center">
+        <h1 className="text-2xl font-bold text-white mb-2">
+          ارجو املاء البيانات الاتية قبل تشغيل عجلة الحظ
+        </h1>
+        <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-lg p-8 shadow-lg">
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="name" className={styles.label}>
+              {nameTextInput}
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className={styles.input}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <br />
+            <label htmlFor="phone" className={styles.label}>
+              {phoneTextInput}
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className={styles.input}
+            />
+            <br />
+            <div className={styles.wheelContainer}>
+              <div
+                className={`${styles.wheel} ${isSpinning ? styles.spin : ""}`}
+                style={{ transform: `rotate(${finalRotation}deg)` }} // تحديد زاوية الدوران النهائية
+              >
+                {points.map((point, index) => {
+                  const isSelected = selectedPoint === point; // تحقق مما إذا كان الرقم هو الرقم المختار
+                  return (
+                    <div
+                      key={index}
+                      className={`${styles.wheelSegment} ${
+                        isSelected ? styles.selected : ""
+                      }`} // إضافة نمط خاص للرقم المختار
+                      style={
+                        {
+                          transform: `rotate(${index * 36}deg)`,
+                          "--index": index,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <span>{point}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <button type="submit" className={styles.spinButton}>
+              ابدأ الدوران
+            </button>
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
     </div>
   );
 }
