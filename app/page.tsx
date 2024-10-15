@@ -49,7 +49,10 @@ export default function Home() {
       // Navigate to the congratulations page if the data is saved successfully
       setSelectedPoint(randomPoint);
       setIsSpinning(false);
-      router.push(`/congrate?point=${randomPoint}`); // Navigate to the congratulations page
+      // Wait 1 second before navigating to the congratulations page
+      setTimeout(() => {
+        router.push(`/congrate?point=${randomPoint}`); // Navigate to the congratulations page
+      }, 2000); // 1000 ms = 1 second
     } catch (error) {
       alert("حدث خطأ أثناء حفظ البيانات.");
       console.log(error);

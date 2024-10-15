@@ -57,7 +57,7 @@ const points = [
   },
 ];
 
-const Congrate = () => {
+export default function Congrate() {
   const param = useSearchParams();
   const router = useRouter();
   const pointParam = param.get("point"); // Get the point from the query parameter
@@ -89,6 +89,4 @@ const Congrate = () => {
       </div>
     </div>
   );
-};
-
-export default Congrate;
+}
